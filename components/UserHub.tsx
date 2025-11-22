@@ -1,6 +1,6 @@
 import React from 'react';
 import { UserProfile, Language, DailyLog } from '../types';
-import { X, User, History, Target, ChevronRight, Edit2, AlertCircle, Globe } from 'lucide-react';
+import { X, User, History, Target, ChevronRight, Edit2, AlertCircle } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -10,12 +10,10 @@ interface Props {
   onOpenHistory: () => void;
   lang: Language;
   dailyLog: DailyLog;
-  customBaseUrl?: string;
-  setCustomBaseUrl?: (url: string) => void;
 }
 
 const UserHub: React.FC<Props> = ({ 
-  isOpen, onClose, userProfile, onEditProfile, onOpenHistory, lang, dailyLog, customBaseUrl, setCustomBaseUrl
+  isOpen, onClose, userProfile, onEditProfile, onOpenHistory, lang, dailyLog
 }) => {
   if (!isOpen) return null;
 
@@ -29,10 +27,7 @@ const UserHub: React.FC<Props> = ({
       entries: "entries",
       edit: "Edit Profile",
       viewHistory: "Manage History",
-      overLimit: "Over Limit",
-      network: "Network Settings",
-      proxyUrl: "API Proxy URL (Optional)",
-      proxyDesc: "For regions where Google is blocked (e.g. China). Leave empty for default."
+      overLimit: "Over Limit"
     },
     zh: {
       title: "个人中心",
@@ -43,10 +38,7 @@ const UserHub: React.FC<Props> = ({
       entries: "条记录",
       edit: "修改档案",
       viewHistory: "管理历史记录",
-      overLimit: "超标",
-      network: "网络设置",
-      proxyUrl: "API 代理地址 (可选)",
-      proxyDesc: "如果你在中国大陆无法使用，请填写 Gemini 代理地址。留空则使用默认地址。"
+      overLimit: "超标"
     }
   };
   const text = t[lang];
@@ -134,31 +126,6 @@ const UserHub: React.FC<Props> = ({
                  <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600" />
               </button>
            </div>
-
-           <hr className="border-gray-100" />
-           
-           {/* Advanced Network Settings (For China Access) */}
-           {setCustomBaseUrl && (
-             <div>
-                <div className="flex items-center gap-2 mb-3">
-                   <Globe size={16} className="text-gray-400" />
-                   <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">{text.network}</h3>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4">
-                   <label className="block text-xs font-bold text-gray-700 mb-1">{text.proxyUrl}</label>
-                   <input 
-                      type="text"
-                      value={customBaseUrl || ""}
-                      onChange={(e) => setCustomBaseUrl(e.target.value)}
-                      placeholder="https://..."
-                      className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-800 placeholder:text-gray-300 outline-none focus:border-emerald-500 transition-colors"
-                   />
-                   <p className="text-[10px] text-gray-400 mt-2 leading-relaxed">
-                      {text.proxyDesc}
-                   </p>
-                </div>
-             </div>
-           )}
         </div>
       </div>
     </div>

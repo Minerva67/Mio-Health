@@ -6,58 +6,69 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 1. Middleware to parse JSON bodies
-app.use(express.json({ limit: '10mb' }));
+// Increase body limit for image uploads
+app.use(express.json({ limit: '20mb' }));
 
-// 2. API Proxy Route
-// This intercepts requests from the frontend asking for Google AI
-// and forwards them to Google from the server (which works in Zeapur)
+// API Proxy Route
+// Intercepts calls to /api/... and forwards them to Google
 app.all('/api/*', async (req, res) => {
   try {
-    // Construct the upstream URL
-    // The frontend sends requests to /api/v1beta/...
-    // We map this to https://generativelanguage.googleapis.com/v1beta/...
-    const targetUrl = `https://generativelanguage.googleapis.com${req.path.replace('/api', '')}${req.url.slice(req.path.length)}`;
+    // 1. Extract the path after /api
+    // Example: Client requests /api/v1beta/models/gemini-pro:generateContent
+    // We need: /v1beta/models/gemini-pro:generateContent
+    const pathAfterApi = req.url.replace(/^\/api/, '');
     
-    // Get the API Key from server environment variables
+    // 2. Construct the Google URL
+    const targetUrl = `https://generativelanguage.googleapis.com${pathAfterApi}`;
+    
+    // 3. Get API Key from environment
     const apiKey = process.env.API_KEY;
+    
     if (!apiKey) {
+      console.error("Missing API_KEY environment variable");
       return res.status(500).json({ error: 'Server configuration error: API_KEY is missing.' });
     }
 
-    // Append API Key to query parameters if it's not there (it usually isn't if we handle it here)
-    // But the SDK puts it in the query param. We need to inject it securely.
+    // 4. Inject API Key securely
     const urlObj = new URL(targetUrl);
-    
-    // If the client sent a dummy key or no key, we force the real server key
     urlObj.searchParams.set('key', apiKey);
 
+    // 5. Forward the request
     const response = await fetch(urlObj.toString(), {
       method: req.method,
       headers: {
         'Content-Type': 'application/json',
-        // Forward necessary headers, but not host
       },
       body: req.method !== 'GET' && req.method !== 'HEAD' ? JSON.stringify(req.body) : undefined,
     });
 
+    // 6. Handle response
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Google API Error:', response.status, errorText);
+      return res.status(response.status).send(errorText);
+    }
+
     const data = await response.json();
-    res.status(response.status).json(data);
+    res.json(data);
 
   } catch (error) {
-    console.error('Proxy Error:', error);
-    res.status(500).json({ error: 'Failed to fetch from Google AI' });
+    console.error('Proxy Internal Error:', error);
+    res.status(500).json({ error: 'Internal Proxy Error' });
   }
 });
 
-// 3. Serve Static Frontend Files (The React App)
+// Serve Static Frontend Files (From Docker dist folder)
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// 4. Handle SPA routing (redirect all other requests to index.html)
+// Handle SPA routing - return index.html for any unknown path
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  if (!process.env.API_KEY) {
+    console.warn("WARNING: API_KEY is not set!");
+  }
 });

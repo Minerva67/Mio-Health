@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, ActivityLevel, Goal, Language } from '../types';
-import { ArrowRight, Check, Settings } from 'lucide-react';
+import { ArrowRight, Check } from 'lucide-react';
 import { AnimatedCatLogo } from './AnimatedCatLogo';
 
 interface Props {
   onComplete: (profile: UserProfile) => void;
   lang: Language;
   initialData?: UserProfile | null;
-  customBaseUrl?: string;
-  setCustomBaseUrl?: (url: string) => void;
 }
 
-const UserProfileSetup: React.FC<Props> = ({ onComplete, lang, initialData, customBaseUrl, setCustomBaseUrl }) => {
+const UserProfileSetup: React.FC<Props> = ({ onComplete, lang, initialData }) => {
   const [formData, setFormData] = useState<Partial<UserProfile>>({
     gender: 'male',
     activity: 'moderate',
@@ -20,7 +18,6 @@ const UserProfileSetup: React.FC<Props> = ({ onComplete, lang, initialData, cust
     heightCm: 170,
     weightKg: 70
   });
-  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -52,9 +49,6 @@ const UserProfileSetup: React.FC<Props> = ({ onComplete, lang, initialData, cust
       gain: "Build Muscle",
       finish: "Calculate My Limits",
       errorInputs: "Please enter valid numbers for height and weight.",
-      networkSettings: "Network Settings",
-      proxyUrl: "API Proxy URL",
-      proxyPlaceholder: "e.g. https://my-worker.workers.dev",
       save: "Save"
     },
     zh: {
@@ -80,9 +74,6 @@ const UserProfileSetup: React.FC<Props> = ({ onComplete, lang, initialData, cust
       gain: "增肌",
       finish: "生成健康档案",
       errorInputs: "请输入有效的身高和体重数值。",
-      networkSettings: "网络设置",
-      proxyUrl: "API 代理地址",
-      proxyPlaceholder: "例如 https://my-worker.workers.dev",
       save: "保存"
     }
   };
@@ -139,42 +130,6 @@ const UserProfileSetup: React.FC<Props> = ({ onComplete, lang, initialData, cust
   return (
     <div className="w-full max-w-md mx-auto pb-10 animate-fade-in relative">
       
-      {/* Settings Button (Absolute Positioned Top Right of Container, relative to Parent App usually puts it in header, but here we add it in body) */}
-      {setCustomBaseUrl && (
-        <div className="absolute -top-14 right-20"> 
-          <button 
-             onClick={() => setShowSettings(!showSettings)}
-             className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 shadow-sm hover:bg-slate-50 transition-colors"
-          >
-             <Settings size={16} />
-          </button>
-        </div>
-      )}
-
-      {/* Settings Modal/Panel */}
-      {showSettings && setCustomBaseUrl && (
-        <div className="mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200 animate-fade-in-up">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{text.networkSettings}</h3>
-            <label className="block text-xs text-slate-400 mb-1">{text.proxyUrl}</label>
-            <input 
-               type="text" 
-               value={customBaseUrl || ''}
-               onChange={(e) => setCustomBaseUrl(e.target.value)}
-               placeholder={text.proxyPlaceholder}
-               className="w-full p-2 text-sm border border-slate-200 rounded-lg mb-2 outline-none focus:border-emerald-500"
-            />
-            <div className="text-[10px] text-slate-400 mb-2">
-              如果在中国大陆无法使用，请填入 Cloudflare Workers 地址。
-            </div>
-            <button 
-              onClick={() => setShowSettings(false)}
-              className="w-full py-2 bg-slate-200 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-300"
-            >
-              {text.save}
-            </button>
-        </div>
-      )}
-
       {/* Updated Header with Mio Persona */}
       <div className="flex items-center gap-4 mb-8 pl-1">
         <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-full shadow-sm flex items-center justify-center shrink-0 border border-orange-200">

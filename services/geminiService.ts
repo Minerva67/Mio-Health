@@ -72,18 +72,16 @@ const foodAnalysisSchema: Schema = {
   required: ["is_food", "request_id", "analysis_summary", "food_details", "nutritional_advice"]
 };
 
-export const analyzeFoodImage = async (file: File, lang: Language, baseUrl?: string): Promise<AnalysisResult> => {
+export const analyzeFoodImage = async (file: File, lang: Language): Promise<AnalysisResult> => {
   
-  // AUTOMATIC PROXY CONFIGURATION
-  // We point the base URL to our local server's /api route.
-  // The server (server.js) handles the actual forwarding to Google and injects the API Key.
-  // We use a dummy key here because the server will replace it with the real one.
+  // PROXY CONFIGURATION
+  // In production (Zeapur), this points to the Node.js server serving this app.
+  // The server.js will forward requests to Google.
+  const PROXY_BASE_URL = window.location.origin + '/api';
   
-  const PROXY_BASE_URL = (baseUrl && baseUrl.trim()) ? baseUrl : (window.location.origin + '/api');
-  
-  // @ts-ignore: baseUrl is supported in runtime but may be missing in current type definitions
   const ai = new GoogleGenAI({ 
-    apiKey: 'manage_at_server_side', 
+    apiKey: 'managed_by_server', // Key is injected by server.js
+    // @ts-ignore: baseUrl is missing in some type definitions but supported
     baseUrl: PROXY_BASE_URL 
   });
   
@@ -102,17 +100,15 @@ export const analyzeFoodImage = async (file: File, lang: Language, baseUrl?: str
        - **Hot Pot / Malatang vs Noodle Soup**: 
          - If you see a large pot with boiling broth and various raw or cooked ingredients (meat slices, vegetables, fish balls) WITHOUT a clear mound of noodles, identify it as **Hot Pot (火锅)** or **Malatang (麻辣烫)**. 
          - Do NOT default to "Beef Noodle Soup" just because there is broth and meat.
-         - Do NOT hallucinate noodles if they are not clearly visible.
        - **Communal Dishes**: If the dish looks like a shared platter, estimate the total value.
 
     2. **ESTIMATION**:
        - **Standard Portions**: Use restaurant standards as a baseline only if scale is unclear.
-       - **Hot Pot Calculation**: For Hot Pot, estimate the *edible solids* intake for one person if it looks like a single serving, or the total pot content if it looks like a shared pot.
        - **Hidden Calories**: Account for oil saturation in cooked vegetables and meats in spicy broths.
-       - **Sauces**: Increase calorie estimates by 20% for restaurant food due to oil/sugar/glazes.
+       - **Sauces**: Increase calorie estimates by 20% for restaurant food.
 
     3. **ANALYZE DETAILS**:
-       - Name items naturally (e.g. "Sweet Potato Vermicelli", "Beef Brisket", "Enoki Mushrooms").
+       - Name items naturally.
        - Calculate GL: Glycemic Load = (GI * Carbs) / 100.
     
     ${langInstruction}
