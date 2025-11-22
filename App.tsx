@@ -35,6 +35,8 @@ const App: React.FC = () => {
     date: '',
     entries: []
   });
+  // Network Settings
+  const [customBaseUrl, setCustomBaseUrl] = useState<string>("");
 
   // For the vibrant loading screen
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -76,6 +78,14 @@ const App: React.FC = () => {
     } else {
       setDailyLog({ date: today, entries: [] });
     }
+
+    const savedSettings = localStorage.getItem('smartplate_settings');
+    if (savedSettings) {
+      const parsedSettings = JSON.parse(savedSettings);
+      if (parsedSettings.customBaseUrl) {
+        setCustomBaseUrl(parsedSettings.customBaseUrl);
+      }
+    }
   }, []);
 
   // Save Data on Change
@@ -88,6 +98,11 @@ const App: React.FC = () => {
         localStorage.setItem('smartplate_log_v2', JSON.stringify(dailyLog));
     }
   }, [dailyLog]);
+
+  // Save Settings
+  useEffect(() => {
+    localStorage.setItem('smartplate_settings', JSON.stringify({ customBaseUrl }));
+  }, [customBaseUrl]);
 
   // Dynamic Loading Messages - CUTE CAT THEME
   useEffect(() => {
@@ -132,7 +147,7 @@ const App: React.FC = () => {
     setError(null);
 
     try {
-      const data = await analyzeFoodImage(file, lang);
+      const data = await analyzeFoodImage(file, lang, customBaseUrl);
       setResult(data);
       setStatus('success');
     } catch (err) {
@@ -405,6 +420,8 @@ const App: React.FC = () => {
         onOpenHistory={() => setShowHistory(true)}
         lang={lang}
         dailyLog={dailyLog}
+        customBaseUrl={customBaseUrl}
+        setCustomBaseUrl={setCustomBaseUrl}
       />
 
     </div>

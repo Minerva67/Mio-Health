@@ -8,6 +8,7 @@ A mobile-first web application that uses Google's Gemini 2.5 Flash model to anal
 - **Strict JSON**: Enforces structured data output for reliable UI rendering.
 - **Visual Feedback**: Color-coded GI levels (Green/Yellow/Red).
 - **Personalized**: BMR/TDEE calculator based on biological sex and activity level.
+- **Proxy Support**: Configurable API endpoint for regions with network restrictions.
 
 ## Setup Instructions
 
@@ -39,12 +40,17 @@ A mobile-first web application that uses Google's Gemini 2.5 Flash model to anal
 
 **Mio Health** 是一个移动端优先的 Web 应用，利用 Google Gemini 2.5 Flash 模型分析食物图片，估算升糖指数 (GI)、热量，并提供个性化的营养建议。
 
-## 功能特点
-- **智能上传**：针对手机优化的拍照或相册选择。
-- **AI 分析**：利用 Gemini 2.5 Flash 强大的视觉识别能力。
-- **结构化数据**：强制 JSON 输出，确保 UI 渲染稳定。
-- **可视化反馈**：红绿灯配色的 GI 等级指示。
-- **个性化设置**：基于生理性别和活动量计算基础代谢 (BMR) 和总消耗 (TDEE)。
+## 中国大陆访问问题 (China Access)
+
+由于 Google API (`generativelanguage.googleapis.com`) 在中国大陆被防火墙 (GFW) 屏蔽，直接访问本应用可能会一直卡在加载界面或报错。
+
+**解决方案：**
+1. **科学上网**：用户需要使用 VPN。
+2. **配置代理 (Proxy)**：本应用支持自定义 API 地址。
+   - 在应用右上角点击“个人中心” (User Hub)。
+   - 滑动到底部找到“网络设置” (Network Settings)。
+   - 在 **API 代理地址** 中输入一个可用的 Gemini 代理地址（例如 `https://你的代理域名.workers.dev`）。
+   - 这样即可免 VPN 使用。
 
 ## 新手设置指南
 
@@ -67,5 +73,5 @@ A mobile-first web application that uses Google's Gemini 2.5 Flash model to anal
    - **安全警告**：发布后，建议去 Google Cloud Console 设置 API Key 的**使用限制 (Referrer restrictions)**，只允许你发布的域名（例如 `myapp.vercel.app`）调用接口，防止额度被盗用！
 
 ## 常见问题
-- **一直在转圈加载？** 检查网络连接。
+- **一直在转圈加载？** 检查网络连接，或是否配置了正确的代理地址。
 - **报错？** 检查 API Key 是否有效，或者免费额度是否用完。

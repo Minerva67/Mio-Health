@@ -72,12 +72,18 @@ const foodAnalysisSchema: Schema = {
   required: ["is_food", "request_id", "analysis_summary", "food_details", "nutritional_advice"]
 };
 
-export const analyzeFoodImage = async (file: File, lang: Language): Promise<AnalysisResult> => {
+export const analyzeFoodImage = async (file: File, lang: Language, baseUrl?: string): Promise<AnalysisResult> => {
   if (!process.env.API_KEY) {
     throw new Error("API Key is missing. Please configure your environment.");
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Support custom proxy URLs for regions like China
+  const clientOptions: any = { apiKey: process.env.API_KEY };
+  if (baseUrl && baseUrl.trim().length > 0) {
+    clientOptions.baseUrl = baseUrl.trim();
+  }
+
+  const ai = new GoogleGenAI(clientOptions);
   
   const imagePart = await fileToGenerativePart(file);
   
@@ -93,8 +99,8 @@ export const analyzeFoodImage = async (file: File, lang: Language): Promise<Anal
        - Accurately identify the dish. 
        - **Hot Pot / Malatang vs Noodle Soup**: 
          - If you see a large pot with boiling broth and various raw or cooked ingredients (meat slices, vegetables, fish balls) WITHOUT a clear mound of noodles, identify it as **Hot Pot (火锅)** or **Malatang (麻辣烫)**. 
-         - Do NOT hallucinate noodles if they are not clearly visible. 
          - Do NOT default to "Beef Noodle Soup" just because there is broth and meat.
+         - Do NOT hallucinate noodles if they are not clearly visible.
        - **Communal Dishes**: If the dish looks like a shared platter, estimate the total value.
 
     2. **ESTIMATION**:
