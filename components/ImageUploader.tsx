@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Upload, Camera, Image as ImageIcon, X, RefreshCw, Aperture, Cat } from 'lucide-react';
+import { Camera, Image as ImageIcon, X } from 'lucide-react';
 import { Language } from '../types';
 
 interface ImageUploaderProps {
@@ -203,7 +203,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, isAnalyzin
       )}
 
       <div 
-        className={`relative w-full aspect-[4/3] rounded-3xl overflow-hidden border-2 border-dashed transition-all shadow-sm
+        className={`relative w-full min-h-[320px] rounded-3xl overflow-hidden border-2 border-dashed transition-all shadow-sm
           ${preview ? 'border-orange-500 bg-black' : 'border-gray-200 bg-white'}
           ${isAnalyzing ? 'opacity-50 pointer-events-none' : ''}
         `}
@@ -213,7 +213,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, isAnalyzin
             <img 
               src={preview} 
               alt="Food Preview" 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover absolute inset-0"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
             <button 
@@ -225,7 +225,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, isAnalyzin
             </button>
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
             <h3 className="font-bold text-gray-400 text-sm tracking-wider mb-6">{text.title}</h3>
             
             <div className="flex gap-4 w-full max-w-xs">

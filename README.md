@@ -42,17 +42,18 @@
 ### Code Philosophy (代码思路)
 
 1.  **Service Layer (`services/geminiService.ts`)**:
-    *   Uses **Chain of Thought (CoT)** prompting. We force the AI to output a `_reasoning` field first. This makes the model "think" about hidden oils or plate sizes *before* outputting numbers, significantly reducing hallucinations.
+    *   **Prompt Engineering**: Uses **Chain of Thought (CoT)** prompting. We force the AI to output a `_reasoning` field first. This makes the model "think" about hidden oils or plate sizes *before* outputting numbers, significantly reducing hallucinations.
     *   **服务层**: 采用了“思维链”提示工程。强制 AI 在输出数字前先输出 `_reasoning`（推理过程），让 AI 先思考烹饪方式和份量，从而大幅提高数值准确性。
 
 2.  **Client-Side Persistence (客户端存储)**:
-    *   To keep the app lightweight and privacy-focused, all user data (Profiles, Daily Logs) is stored in `localStorage`.
-    *   **数据持久化**: 为了保持应用轻量且保护隐私，所有用户档案和每日记录均存储在浏览器本地 (`localStorage`)。
+    *   **Privacy First**: To keep the app lightweight and privacy-focused, all user data (Profiles, Daily Logs) is stored in `localStorage`. No external database is needed.
+    *   **Data Structure**: Daily logs automatically reset based on the date check in `App.tsx`.
+    *   **数据持久化**: 为了保持应用轻量且保护隐私，所有用户档案和每日记录均存储在浏览器本地 (`localStorage`)。应用会根据日期自动判断是否重置当日数据。
 
 3.  **Component Modularity (组件模块化)**:
-    *   `App.tsx`: Acts as the central state manager and router.
-    *   `ResultDisplay.tsx`: Handles the complex logic of displaying nutrition cards and calculating totals.
-    *   `ImageUploader.tsx`: Manages camera streams and file inputs, compatible with mobile devices.
+    *   `App.tsx`: Central state manager.
+    *   `ResultDisplay.tsx`: Handles complex nutrition logic and GL calculation updates.
+    *   `ImageUploader.tsx`: Optimized for mobile, handling camera streams and responsive layouts.
 
 ---
 
