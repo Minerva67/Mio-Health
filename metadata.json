@@ -1,0 +1,7 @@
+{
+  "name": "Mio Health",
+  "description": "A cute, mobile-first application that analyzes food images to provide GI values and nutritional advice using Gemini 2.5 Flash.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
