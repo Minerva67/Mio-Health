@@ -73,17 +73,19 @@ const foodAnalysisSchema: Schema = {
 };
 
 export const analyzeFoodImage = async (file: File, lang: Language, baseUrl?: string): Promise<AnalysisResult> => {
-  if (!process.env.API_KEY) {
-    throw new Error("API Key is missing. Please configure your environment.");
-  }
-
-  // Support custom proxy URLs for regions like China
-  const clientOptions: any = { apiKey: process.env.API_KEY };
-  if (baseUrl && baseUrl.trim().length > 0) {
-    clientOptions.baseUrl = baseUrl.trim();
-  }
-
-  const ai = new GoogleGenAI(clientOptions);
+  
+  // AUTOMATIC PROXY CONFIGURATION
+  // We point the base URL to our local server's /api route.
+  // The server (server.js) handles the actual forwarding to Google and injects the API Key.
+  // We use a dummy key here because the server will replace it with the real one.
+  
+  const PROXY_BASE_URL = (baseUrl && baseUrl.trim()) ? baseUrl : (window.location.origin + '/api');
+  
+  // @ts-ignore: baseUrl is supported in runtime but may be missing in current type definitions
+  const ai = new GoogleGenAI({ 
+    apiKey: 'manage_at_server_side', 
+    baseUrl: PROXY_BASE_URL 
+  });
   
   const imagePart = await fileToGenerativePart(file);
   
