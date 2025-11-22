@@ -3,31 +3,19 @@ import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
+  // Load env file based on `mode` in the current working directory.
+  // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
   const env = loadEnv(mode, process.cwd(), '');
-  
+
   return {
     plugins: [react()],
-    server: {
-      // Setup a proxy for local development (npm run dev)
-      // This mimics what server.js does in production
-      proxy: {
-        '/api': {
-          target: 'https://generativelanguage.googleapis.com',
-          changeOrigin: true,
-          rewrite: (path) => {
-            // The Client SDK sends /api/v1beta/...
-            // We want to forward to https://generativelanguage.googleapis.com/v1beta/...
-            // And we need to inject the key locally
-            const newPath = path.replace(/^\/api/, '');
-            // For local dev, we append the key from local .env
-            return `${newPath}${newPath.includes('?') ? '&' : '?'}key=${env.API_KEY || process.env.API_KEY}`;
-          }
-        }
-      }
-    },
+    // Define global constants replacement. 
+    // This allows `process.env.API_KEY` to work in the browser code.
     define: {
-      // We don't need to expose API_KEY to the client anymore in production
-      // But for consistency, we leave the logic clean
+      'process.env.API_KEY': JSON.stringify(env.API_KEY)
+    },
+    server: {
+      // Basic server config
     }
   };
 });
