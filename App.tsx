@@ -222,15 +222,19 @@ const App: React.FC = () => {
              <AnimatedCatLogo />
             {text.title}
           </h1>
-          <button onClick={toggleLanguage} className="text-sm font-bold text-slate-500 border px-3 py-1.5 rounded-full flex items-center gap-1 bg-white shadow-sm">
-            <Globe size={14} />
-            {lang === 'en' ? 'EN' : '中文'}
-          </button>
+          <div className="flex items-center gap-3">
+            <button onClick={toggleLanguage} className="text-sm font-bold text-slate-500 border px-3 py-1.5 rounded-full flex items-center gap-1 bg-white shadow-sm">
+              <Globe size={14} />
+              {lang === 'en' ? 'EN' : '中文'}
+            </button>
+          </div>
         </div>
         <UserProfileSetup 
           onComplete={handleProfileComplete} 
           lang={lang} 
-          initialData={userProfile} 
+          initialData={userProfile}
+          customBaseUrl={customBaseUrl}
+          setCustomBaseUrl={setCustomBaseUrl}
         />
       </div>
     );
