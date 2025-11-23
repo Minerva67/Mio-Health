@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, Globe } from 'lucide-react';
+import { AlertCircle, Globe, Clock, ZapOff } from 'lucide-react';
 import ImageUploader from './components/ImageUploader';
 import ResultDisplay from './components/ResultDisplay';
 import UserProfileSetup from './components/UserProfileSetup';
@@ -131,8 +131,30 @@ const App: React.FC = () => {
   const isOverLimit = progressPercent > 100;
 
   const t = {
-    en: { slogan: "Eat for Vitality", sub: "Balance • Joy • Health", desc: "Let Mio help you find the healthiest choice in every meal.", today: "Today's Intake", target: "Target", error: "Mio is confused", retry: "Try Again", over: "Max Power" },
-    zh: { slogan: "吃出满满元气", sub: "平衡 • 快乐 • 健康", desc: "让 Mio 帮你发现每一餐的健康秘密。", today: "今日摄入", target: "目标", error: "Mio 没看懂", retry: "再试一次", over: "能量爆表" }
+    en: { 
+      slogan: "Eat for Vitality", 
+      sub: "Balance • Joy • Health", 
+      desc: "Let Mio help you find the healthiest choice in every meal.", 
+      today: "Today's Intake", 
+      target: "Target", 
+      error: "Mio is confused", 
+      quotaError: "Mio Needs a Nap",
+      quotaDesc: "Too many requests! The free API quota is exhausted. Please try again later.",
+      retry: "Try Again", 
+      over: "Max Power" 
+    },
+    zh: { 
+      slogan: "吃出满满元气", 
+      sub: "平衡 • 快乐 • 健康", 
+      desc: "让 Mio 帮你发现每一餐的健康秘密。", 
+      today: "今日摄入", 
+      target: "目标", 
+      error: "Mio 没看懂",
+      quotaError: "Mio 累了 (配额已满)",
+      quotaDesc: "API 调用太频繁啦，Mio 需要休息一会儿。请过几分钟再试喵！",
+      retry: "再试一次", 
+      over: "能量爆表" 
+    }
   };
   const text = t[lang];
 
@@ -195,9 +217,30 @@ const App: React.FC = () => {
 
         {status === 'error' && (
           <div className="flex-1 flex flex-col items-center justify-center min-h-[50vh] text-center animate-fade-in">
-            <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-4 text-red-500 border border-red-100 shadow-lg"><AnimatedCatLogo size={60} /></div>
-            <h3 className="text-lg font-bold text-slate-900">{text.error}</h3>
-            <p className="text-slate-500 mt-2 mb-8 text-sm px-8 leading-relaxed">{error}</p>
+            {error === "QUOTA_EXCEEDED" ? (
+              // Specific UI for Quota Limit
+              <>
+                 <div className="w-24 h-24 bg-orange-100 rounded-full flex items-center justify-center mb-4 text-orange-500 border border-orange-200 shadow-lg relative">
+                    <AnimatedCatLogo size={60} />
+                    <div className="absolute -top-1 -right-1 bg-white rounded-full p-1 shadow">
+                       <ZapOff size={20} className="text-slate-400" />
+                    </div>
+                 </div>
+                 <h3 className="text-lg font-bold text-slate-900">{text.quotaError}</h3>
+                 <div className="bg-orange-50 text-orange-800 text-xs px-4 py-3 rounded-xl mt-3 mb-6 max-w-[260px] leading-relaxed border border-orange-100 flex items-start gap-2 text-left">
+                    <Clock size={16} className="shrink-0 mt-0.5" />
+                    {text.quotaDesc}
+                 </div>
+              </>
+            ) : (
+              // Generic Error
+              <>
+                <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-4 text-red-500 border border-red-100 shadow-lg"><AnimatedCatLogo size={60} /></div>
+                <h3 className="text-lg font-bold text-slate-900">{text.error}</h3>
+                <p className="text-slate-500 mt-2 mb-8 text-sm px-8 leading-relaxed">{error}</p>
+              </>
+            )}
+            
             <button onClick={handleReset} className="bg-slate-900 text-white px-8 py-3.5 rounded-full font-bold shadow-xl shadow-slate-200 active:scale-95 transition-all">{text.retry}</button>
           </div>
         )}

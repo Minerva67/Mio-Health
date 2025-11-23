@@ -28,31 +28,33 @@ const compressImage = async (file: File): Promise<string> => {
   });
 };
 
+// Existing app structure must be maintained for frontend compatibility
+// BUT we strictly enforce the logic from the Expert Prompt provided by user.
 const OUTPUT_STRUCTURE = {
-  is_food: "boolean (true only if edible food/drink)",
-  _reasoning: "string (CRITICAL: Explain cooking method detection (fried/steamed?), portion estimation logic, and why GI is 0 for pure proteins)",
+  is_food: "boolean (true if edible)",
   request_id: "string",
+  _analysis_log: "string (CRITICAL: Strict log of volumetric calculation. Must state: 'Reference object: [X]. Est. Volume: [Y]. Density: [Z]. Calc. Weight: [W]g.')",
   analysis_summary: {
-    total_calories: "number (integer, required)",
-    total_carbs: "number (integer, required)",
-    total_protein: "number (integer, required)",
-    total_fat: "number (integer, required)",
-    overall_health_score: "number (1-10)",
-    meal_type: "string (e.g., Breakfast, Snack)",
-    short_description: "string (max 10 words)"
+    total_calories: "number (integer, sum of all items)",
+    total_carbs: "number (integer)",
+    total_protein: "number (integer)",
+    total_fat: "number (integer)",
+    overall_health_score: "number (1-10, penalize for high sugar sauces/deep frying)",
+    meal_type: "string (Breakfast/Lunch/Dinner/Snack)",
+    short_description: "string (technical name, e.g., 'Soy-Braised Beef Brisket')"
   },
   food_details: [{
-    name: "string (specific name)",
-    gi_value: "number (0-100, use 0 for pure meats/fats)",
+    name: "string (Specific dish name)",
+    gi_value: "number (0-100. Base GI + Sauce Correction)",
     gi_level: "Low|Medium|High",
-    glycemic_load: "number (integer)",
-    portion_size: "string (e.g., 1 bowl, 200g)",
-    calories_approx: "number",
-    carbs_g: "number",
-    protein_g: "number",
-    fat_g: "number"
+    glycemic_load: "number (Formula: Modified GI * Total Carbs / 100)",
+    portion_size: "string (e.g. '150g' or '1 bowl')",
+    calories_approx: "number (integer)",
+    carbs_g: "number (integer. Include sauce/breading carbs!)",
+    protein_g: "number (integer)",
+    fat_g: "number (integer)"
   }],
-  nutritional_advice: { advice_list: ["string (short, actionable tip)"] }
+  nutritional_advice: { advice_list: ["string (3 strictly scientific, clinical suggestions based on the analysis)"] }
 };
 
 export const analyzeFoodImage = async (file: File, lang: Language): Promise<AnalysisResult> => {
@@ -60,39 +62,58 @@ export const analyzeFoodImage = async (file: File, lang: Language): Promise<Anal
     const base64Data = await compressImage(file);
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
-    // Improved Prompt with Chain of Thought (CoT) embedded in JSON
+    // ADVANCED CLINICAL PROMPT (Based on User's "Prompt Expert" Design)
     const prompt = `
-      You are an expert Clinical Dietitian and Food Scientist.
-      Analyze the attached food image with extreme precision.
+      **ROLE**: Senior Clinical Dietitian & Visual Food Analyst (15+ years exp).
+      **TASK**: Based on Physics, Volumetric Analysis, and Biochemistry, strictly analyze the food image.
+      **OUTPUT LANGUAGE**: ${lang === 'zh' ? 'Simplified Chinese (zh-CN)' : 'English'}.
 
-      ### ANALYSIS PROTOCOL (CHAIN OF THOUGHT):
-      1.  **Detection**: Verify if it is food.
-      2.  **Identify Ingredients & Method**: 
-          - Differentiate strictly between *Deep-Fried* (High Fat), *Stir-fried* (Medium Fat), and *Steamed/Boiled* (Low Fat).
-          - Identify sauces which hide calories.
-      3.  **Macro Calculation**:
-          - Pure Protein (Chicken breast, Egg whites, Fish) -> **GI is 0**.
-          - Pure Fats (Oils, Butter) -> **GI is 0**.
-          - Only Carbohydrates trigger GI.
-      4.  **Portion Estimation**:
-          - Don't just guess standard 100g. Look at the container/plate size.
+      ---
+      ### 🔬 STEP 1: VOLUMETRIC WEIGHT ESTIMATION (Physics-Based)
+      **Goal**: Convert visual pixels to Grams.
+      1. **Identify Reference Object**:
+         - *Priority A*: Standard objects (Chopsticks, Spoon, 4.5" Rice Bowl).
+         - *Priority B*: Container size (assume standard 8-10" plate if undefined).
+      2. **Volume Estimation**: Estimate volume (ml/cups) based on container fullness.
+      3. **Density Application**:
+         - *Leafy Greens*: Low Density (~0.3-0.5 g/ml).
+         - *Rice/Starch*: Medium Density (~0.7-1.0 g/ml).
+         - *Meat/Protein*: High Density (~1.0-1.2 g/ml).
+         - *Mixed Dish*: Decompose into parts (e.g., 60% veg, 40% meat) and sum.
+      4. **Result**: Volume (ml) * Density = Weight (g).
+      *Constraint*: You MUST log this calculation in the '_analysis_log' field.
 
-      ### OUTPUT REQUIREMENT:
-      - Return ONLY valid JSON.
-      - **CRITICAL**: You MUST fill the "_reasoning" field first. Use it to "think out loud" about the cooking method and portion size before generating the numbers. This prevents hallucinations.
-      - Structure: ${JSON.stringify(OUTPUT_STRUCTURE)}
+      ---
+      ### 🧪 STEP 2: GL/GI "BASE + CORRECTION" ALGORITHM
+      **Goal**: Identify cooking methods that alter the Base GI.
+      1. **Determine Base Value**: Lookup raw ingredient GI.
+      2. **Apply Correction Factors**:
+         - **Shiny/Sticky Glaze (Red Braised/Teriyaki)**: Indicates Sugar/Starch/Soy. 
+           -> ACTION: **ADD Carbs** (Sugars). **RAISE GI** (e.g., Stewed Beef GI 0 -> 45).
+         - **Breading/Deep Fried**:
+           -> ACTION: **ADD Carbs** (Flour) & **ADD Fat** (Oil).
+         - **Steamed/Blanched**: 
+           -> ACTION: Use Base Value.
+      3. **Calculate GL**: GL = (Modified GI * Total Carbs) / 100.
 
-      ### LANGUAGE:
-      Respond strictly in ${lang === 'zh' ? 'Simplified Chinese (zh-CN)' : 'English'}.
+      ---
+      ### 📝 STEP 3: STRICT CLINICAL ADVICE
+      - Provide exactly 3 bullet points.
+      - Focus on: Blood sugar impact, Nutrient density, Digestion.
+      - **NO** generic advice like "Drink more water".
+
+      ### OUTPUT
+      Return ONLY valid JSON matching this structure (no markdown, no code blocks):
+      ${JSON.stringify(OUTPUT_STRUCTURE)}
     `;
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       config: { 
         responseMimeType: 'application/json',
-        temperature: 0.5, // Lower temperature for more consistent numerical output
-        topP: 0.95,
-        topK: 40
+        temperature: 0.1, // Very low for calculation precision
+        topP: 0.8,
+        topK: 20
       },
       contents: {
         parts: [
@@ -104,12 +125,18 @@ export const analyzeFoodImage = async (file: File, lang: Language): Promise<Anal
 
     if (!response.text) throw new Error("No response from AI");
     
-    // Clean up potential markdown formatting
     const cleanText = response.text.replace(/```json|```/g, '').trim();
     return JSON.parse(cleanText) as AnalysisResult;
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Analysis Failed:", error);
-    throw new Error(lang === 'zh' ? "分析失败，请检查网络或 API Key。" : "Analysis failed. Please check your API Key.");
+    const errString = error.toString().toLowerCase();
+    
+    // Handle Quota/Rate Limit Errors specifically
+    if (errString.includes('429') || errString.includes('quota') || errString.includes('exhausted')) {
+       throw new Error("QUOTA_EXCEEDED");
+    }
+
+    throw new Error(lang === 'zh' ? "分析失败，请检查图片或网络。" : "Analysis failed. Please check image or network.");
   }
 };

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnalysisResult, FoodItem, Language, UserProfile, DailyLog, MealEntry } from '../types';
-import { CheckCircle, Plus, Edit3, Save, Info, Camera, Zap } from 'lucide-react';
+import { CheckCircle, Plus, Edit3, Save, Info, Camera, Zap, Scale } from 'lucide-react';
 import { AnimatedCatLogo } from './AnimatedCatLogo';
 import Gauge from './Gauge';
 
@@ -56,7 +56,8 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, userProfile, dail
       whatIsGi: "The Secret of GL", 
       giExplanationText: "\" The dose makes the poison. \" High GI foods (like Watermelon) can have a very Low GL if you eat a small portion. Always look at the GL to stay fit!",
       advice: "Mio's Advice", scanNext: "Snap Next Meal", notFoodTitle: "Mio is Confused", notFoodDesc: "This doesn't look like food to me.", retry: "Try Again",
-      reportTitle: "Mio's Report"
+      reportTitle: "Mio's Report",
+      estWeight: "Est. Weight"
     },
     zh: {
       totalCal: "总能量", edit: "修改", save: "保存", remaining: "今日剩余", addToLog: "喂给 Mio", added: "好吃！已记录",
@@ -65,7 +66,8 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, userProfile, dail
       whatIsGi: "GI 和 GL 的小秘密",
       giExplanationText: "抛开剂量谈毒性是耍流氓喵！高 GI 食物（比如西瓜）只要吃得少，GL 其实很低，完全不用慌。控制总量才是王道！",
       advice: "Mio 的建议", scanNext: "拍下一餐", notFoodTitle: "Mio 没看懂", notFoodDesc: "这看起来不像食物耶？请拍一张清晰的食物照片给我。", retry: "重新拍摄",
-      reportTitle: "Mio 的分析报告"
+      reportTitle: "Mio 的分析报告",
+      estWeight: "估算重量"
     }
   };
   const text = t[lang];
@@ -167,7 +169,14 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, userProfile, dail
                {isEditing ? (
                   <input type="text" value={item.name} onChange={(e) => handleItemChange(idx, 'name', e.target.value)} className="font-bold text-lg border-b border-slate-300 focus:border-emerald-500 outline-none w-full mr-4 bg-transparent" />
                ) : (
-                  <h4 className="font-bold text-lg text-slate-800">{item.name}</h4>
+                  <div className="flex flex-col">
+                    <h4 className="font-bold text-lg text-slate-800">{item.name}</h4>
+                    {/* Weight Estimation Display */}
+                    <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-400 font-medium">
+                      <Scale size={12} />
+                      {item.portion_size}
+                    </div>
+                  </div>
                )}
                <div className="flex flex-col items-end">
                   {isEditing ? (
